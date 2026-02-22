@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BALL BATTLE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
+
+  :root {
+    --p1: #00e5ff;
+    --p2: #ff4444;
+    --bg: #0a0a0f;
+    --panel: #111118;
+    --border: #222233;
+    --gold: #ffd700;
+    --nuke-color: #ff6b00;
+    --doge-color: #00ff88;
+    --world-color: #cc44ff;
+    --mih-color: #ffffff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Rajdhani', sans-serif;
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .page { display: none; min-height: 100vh; }
+  .page.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+  /* ===== SELECT PAGE ===== */
+  #page-select {
+    padding: 20px;
+    background: radial-gradient(ellipse at 50% 0%, #1a0033 0%, var(--bg) 60%);
+  }
+
+  .game-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 8vw, 96px);
+    text-align: center;
+    letter-spacing: 8px;
+    background: linear-gradient(90deg, var(--p1), #fff, var(--p2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+    animation: titlePulse 3s ease-in-out infinite;
+  }
+
+  @keyframes titlePulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.3); }
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 14px;
+    letter-spacing: 4px;
+    color: #555;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+  }
+
+  .select-arena {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 960px;
+  }
+
+  .player-panel {
+    flex: 1;
+    min-width: 260px;
+    max-width: 380px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--panel);
+    position: relative;
+  }
+
+  .player-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 2px 2px 0 0;
+  }
+
+  #panel-p1::before { background: var(--p1); box-shadow: 0 0 15px var(--p1); }
+  #panel-p2::before { background: var(--p2); box-shadow: 0 0 15px var(--p2); }
+
+  .panel-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .player-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    animation: blink 1.2s ease-in-out infinite;
+  }
+
+  #panel-p1 .player-dot { background: var(--p1); box-shadow: 0 0 8px var(--p1); }
+  #panel-p2 .player-dot { background: var(--p2); box-shadow: 0 0 8px var(--p2); }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .panel-header span {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+  }
+
+  #panel-p1 .panel-header span { color: var(--p1); }
+  #panel-p2 .panel-header span { color: var(--p2); }
+
+  .chars {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .char-card {
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .char-card:hover { border-color: #444; transform: translateX(4px); }
+
+  .char-card.selected-nuke  { border-color: var(--nuke-color);  background: rgba(255,107,0,0.1);   box-shadow: 0 0 20px rgba(255,107,0,0.2); }
+  .char-card.selected-doge  { border-color: var(--doge-color);  background: rgba(0,255,136,0.1);   box-shadow: 0 0 20px rgba(0,255,136,0.2); }
+  .char-card.selected-world { border-color: var(--world-color); background: rgba(204,68,255,0.1);  box-shadow: 0 0 20px rgba(204,68,255,0.2); }
+  .char-card.selected-mih   { border-color: #fff; background: rgba(255,255,255,0.08); box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+
+  .char-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .char-emoji {
+    font-size: 36px;
+    line-height: 1;
+    animation: floatEmoji 2.5s ease-in-out infinite;
+  }
+
+  @keyframes floatEmoji {
+    0%,100%{ transform: translateY(0); }
+    50%{ transform: translateY(-5px); }
+  }
+
+  .char-info { flex: 1; }
+
+  .char-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+  }
+
+  .char-card[data-char="nuke"]  .char-name { color: var(--nuke-color); }
+  .char-card[data-char="doge"]  .char-name { color: var(--doge-color); }
+  .char-card[data-char="world"] .char-name { color: var(--world-color); }
+
+  .char-tag {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #666;
+    text-transform: uppercase;
+  }
+
+  .char-desc {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.5;
+  }
+
+  .check {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .selected-nuke  .check { background: var(--nuke-color);  opacity: 1; }
+  .selected-doge  .check { background: var(--doge-color);  opacity: 1; }
+  .selected-world .check { background: var(--world-color); opacity: 1; }
+
+  .vs-divider {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 60px;
+    color: #333;
+    text-shadow: 0 0 30px rgba(255,255,255,0.1);
+    align-self: center;
+    flex-shrink: 0;
+  }
+
+  .start-btn {
+    margin-top: 30px;
+    padding: 16px 60px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 5px;
+    border: 2px solid #fff;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .start-btn:disabled { border-color: #333; color: #444; cursor: not-allowed; }
+  .start-btn:not(:disabled):hover { background: #fff; color: #000; box-shadow: 0 0 40px rgba(255,255,255,0.3); transform: scale(1.03); }
+
+  .select-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: #444;
+    text-transform: uppercase;
+  }
+
+  /* ===== BATTLE PAGE ===== */
+  #page-battle {
+    flex-direction: column;
+    padding: 20px;
+    background: radial-gradient(ellipse at 50% 50%, #0d0d20 0%, var(--bg) 70%);
+    gap: 0;
+  }
+
+  .hud {
+    display: flex;
+    width: 100%;
+    max-width: 800px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .hud-player {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .hud-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #hud-p1 .hud-name { color: var(--p1); }
+  #hud-p2 .hud-name { color: var(--p2); justify-content: flex-end; }
+
+  .hp-bar-wrap {
+    height: 12px;
+    background: #111;
+    border-radius: 6px;
+    border: 1px solid #222;
+    overflow: hidden;
+  }
+
+  .hp-bar { height: 100%; border-radius: 6px; transition: width 0.3s; }
+  #hp-bar-p1 { background: linear-gradient(90deg, #005577, var(--p1)); box-shadow: 0 0 10px var(--p1); }
+  #hp-bar-p2 { background: linear-gradient(90deg, var(--p2), #770000); box-shadow: 0 0 10px var(--p2); margin-left: auto; }
+
+  .hp-text { font-size: 13px; font-weight: 700; color: #aaa; }
+  #hud-p2 .hp-text { text-align: right; }
+
+  /* Skill cooldown label under HP */
+  .skill-cd-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #555;
+    text-transform: uppercase;
+  }
+  #hud-p2 .skill-cd-label { text-align: right; }
+
+  .hud-vs {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    color: #333;
+    flex-shrink: 0;
+    padding: 0 10px;
+  }
+
+  /* ARENA */
+  .arena-wrap {
+    width: 100%;
+    max-width: 800px;
+    position: relative;
+  }
+
+  #arena {
+    width: 100%;
+    height: 380px;
+    background: #0a0a12;
+    border: 1px solid #1e1e33;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #arena::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 80%, rgba(255,255,255,0.02) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .ground {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 50px;
+    background: linear-gradient(180deg, #111122, #0d0d1a);
+    border-top: 2px solid #1e1e3a;
+  }
+
+  .ground-grid {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 100%;
+  }
+
+  /* BALLS */
+  .ball {
+    position: absolute;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    user-select: none;
+    z-index: 10;
+    transition: box-shadow 0.2s;
+  }
+
+  #ball-p1 {
+    width: 60px; height: 60px;
+    background: radial-gradient(circle at 35% 35%, #66ffff, var(--p1), #003344);
+    box-shadow: 0 0 20px rgba(0,229,255,0.5), 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  #ball-p2 {
+    width: 60px; height: 60px;
+    background: radial-gradient(circle at 35% 35%, #ffaaaa, var(--p2), #440000);
+    box-shadow: 0 0 20px rgba(255,68,68,0.5), 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  .ball.mih-active {
+    animation: mihGlow 0.4s ease-in-out infinite alternate;
+  }
+
+  @keyframes mihGlow {
+    0%{ box-shadow: 0 0 15px #fff, 0 0 30px #aaf, 0 0 60px #88f; }
+    100%{ box-shadow: 0 0 30px #fff, 0 0 60px #ccf, 0 0 100px #aaf; }
+  }
+
+  .ball.hit { animation: hitAnim 0.3s ease; }
+
+  @keyframes hitAnim {
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(0.85); filter: brightness(3); }
+  }
+
+  .ball.stunned {
+    animation: stunAnim 0.5s ease-in-out infinite;
+    filter: brightness(0.5) sepia(1) hue-rotate(200deg);
+  }
+
+  @keyframes stunAnim {
+    0%,100%{ transform: rotate(-8deg) scale(0.95); }
+    50%{ transform: rotate(8deg) scale(1.05); }
+  }
+
+  /* STUN STARS */
+  .stun-stars {
+    position: absolute;
+    pointer-events: none;
+    z-index: 25;
+    font-size: 20px;
+    animation: starsFloat 0.6s ease-in-out infinite alternate;
+  }
+
+  @keyframes starsFloat {
+    0%{ transform: translateY(0) rotate(-10deg); }
+    100%{ transform: translateY(-8px) rotate(10deg); }
+  }
+
+  /* NUKE EXPLOSION */
+  .explosion {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, #ff6b00 30%, #ff0000 60%, transparent 100%);
+    animation: explodeAnim 0.6s ease-out forwards;
+    pointer-events: none;
+    z-index: 20;
+  }
+
+  @keyframes explodeAnim {
+    0%{ width: 0; height: 0; opacity: 1; transform: translate(-50%, -50%); }
+    60%{ opacity: 0.8; }
+    100%{ width: 250px; height: 250px; opacity: 0; transform: translate(-50%, -50%); }
+  }
+
+  /* THE WORLD EFFECT */
+  .world-freeze {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(204,68,255,0.15) 0%, rgba(100,0,200,0.05) 60%, transparent 100%);
+    animation: worldPulse 0.8s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 15;
+    border-radius: 12px;
+  }
+
+  @keyframes worldPulse {
+    0%,100%{ opacity: 0.6; }
+    50%{ opacity: 1; }
+  }
+
+  .world-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    letter-spacing: 6px;
+    color: var(--world-color);
+    text-shadow: 0 0 40px var(--world-color), 0 0 80px rgba(204,68,255,0.5);
+    animation: worldTextAnim 0.4s ease-out;
+    pointer-events: none;
+    z-index: 16;
+    white-space: nowrap;
+  }
+
+  @keyframes worldTextAnim {
+    0%{ transform: translate(-50%,-50%) scale(0.3); opacity: 0; }
+    60%{ transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
+    100%{ transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  }
+
+  /* DAMAGE POPUP */
+  .dmg-popup {
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    animation: popupAnim 0.8s ease-out forwards;
+    pointer-events: none;
+    z-index: 30;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    transform: translateX(-50%);
+  }
+
+  @keyframes popupAnim {
+    0%{ transform: translateX(-50%) translateY(0); opacity: 1; }
+    100%{ transform: translateX(-50%) translateY(-60px); opacity: 0; }
+  }
+
+  .dmg-miss {
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    color: var(--doge-color);
+    animation: popupAnim 0.8s ease-out forwards;
+    pointer-events: none;
+    z-index: 30;
+    text-shadow: 0 0 15px var(--doge-color);
+    transform: translateX(-50%);
+  }
+
+  /* NUKE TIMER */
+  .nuke-timer {
+    position: absolute;
+    top: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255,107,0,0.15);
+    border: 1px solid var(--nuke-color);
+    color: var(--nuke-color);
+    animation: timerBlink 1s ease-in-out infinite;
+    z-index: 20;
+  }
+
+  @keyframes timerBlink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* LOG */
+  .battle-log {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 10px;
+    height: 68px;
+    overflow: hidden;
+  }
+
+  .log-inner {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 4px;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .log-entry {
+    font-size: 13px;
+    color: #666;
+    letter-spacing: 1px;
+    animation: logFade 0.3s ease;
+  }
+
+  @keyframes logFade { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+
+  .log-entry.p1 { color: var(--p1); }
+  .log-entry.p2 { color: var(--p2); }
+  .log-entry.special { color: var(--gold); }
+  .log-entry.world { color: var(--world-color); }
+
+  /* SKILL COOLDOWN BARS */
+  .skill-bars {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    gap: 16px;
+  }
+
+  .skill-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .skill-bar-group.right { align-items: flex-end; }
+
+  .skill-bar-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #555;
+    text-transform: uppercase;
+  }
+
+  .cooldown-bar {
+    height: 5px;
+    border-radius: 3px;
+    width: 100%;
+    background: #1a1a2e;
+    overflow: hidden;
+  }
+
+  .cooldown-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.1s linear;
+    width: 0%;
+  }
+
+  #cd-p1 { background: var(--p1); }
+  #cd-p2 { background: var(--p2); }
+
+  /* WIN MODAL */
+  .win-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+
+  .win-overlay.show { display: flex; }
+
+  .win-box {
+    text-align: center;
+    padding: 50px 60px;
+    border-radius: 16px;
+    border: 1px solid #333;
+    background: var(--panel);
+    position: relative;
+    overflow: hidden;
+    animation: winPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes winPop {
+    from{ transform: scale(0.5); opacity: 0; }
+    to{ transform: scale(1); opacity: 1; }
+  }
+
+  .win-label {
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #555;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .win-char {
+    font-size: 50px;
+    margin-bottom: 20px;
+    animation: floatEmoji 1.5s ease-in-out infinite;
+  }
+
+  .win-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    letter-spacing: 6px;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .win-msg {
+    font-size: 16px;
+    color: #888;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+  }
+
+  .replay-btn {
+    padding: 14px 50px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 4px;
+    background: transparent;
+    border: 2px solid #fff;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .replay-btn:hover { background: #fff; color: #000; box-shadow: 0 0 30px rgba(255,255,255,0.3); }
+
+  /* CONFETTI */
+  .confetti-piece {
+    position: fixed;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+    z-index: 600;
+  }
+
+  @keyframes confettiFall {
+    0%{ transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100%{ transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* COUNTER CLASH */
+  .ball.counter-clash {
+    animation: counterClashAnim 0.15s ease-in-out infinite;
+  }
+  @keyframes counterClashAnim {
+    0%{ filter: brightness(3) hue-rotate(0deg); transform: scale(1.15); }
+    100%{ filter: brightness(4) hue-rotate(180deg); transform: scale(0.9); }
+  }
+  .counter-text {
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 44px;
+    letter-spacing: 5px;
+    color: #ff0;
+    text-shadow: 0 0 30px #ff0, 0 0 60px #f80;
+    animation: counterTextAnim 0.5s ease-out forwards;
+    pointer-events: none;
+    z-index: 35;
+    white-space: nowrap;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  @keyframes counterTextAnim {
+    0%{ opacity:0; transform: translate(-50%,-50%) scale(0.3); }
+    40%{ opacity:1; transform: translate(-50%,-60%) scale(1.2); }
+    100%{ opacity:0; transform: translate(-50%,-80%) scale(1); }
+  }
+
+  /* COUNTER CHAR */
+  .char-card[data-char="counter"] .char-name { color: #ffdd00; }
+  .char-card.selected-counter { border-color: #ffdd00; background: rgba(255,220,0,0.08); box-shadow: 0 0 20px rgba(255,220,0,0.3); }
+  .selected-counter .check { background: #ffdd00; opacity: 1; }
+
+  /* COLLISION FLASH */
+  .collision-flash {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,200,0,0.6) 40%, transparent 70%);
+    animation: collisionFlashAnim 0.4s ease-out forwards;
+    pointer-events: none;
+    z-index: 22;
+  }
+
+  @keyframes collisionFlashAnim {
+    0%{ width: 0; height: 0; opacity: 1; transform: translate(-50%,-50%); }
+    100%{ width: 80px; height: 80px; opacity: 0; transform: translate(-50%,-50%); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1: SELECT ============ -->
+<div class="page active" id="page-select">
+  <div class="game-title">BALL BATTLE</div>
+  <div class="subtitle">Bola Mantul · Skill Otomatis · 1v1</div>
+
+  <div class="select-arena">
+    <!-- P1 -->
+    <div class="player-panel" id="panel-p1">
+      <div class="panel-header">
+        <div class="player-dot"></div>
+        <span>Player 1</span>
+      </div>
+      <div class="chars" id="chars-p1">
+        <div class="char-card" data-char="nuke" data-player="1">
+          <div class="check">✓</div>
+          <div class="char-top">
+            <div class="char-emoji">💣</div>
+            <div class="char-info">
+              <div class="char-name">NUKE</div>
+              <div class="char-tag">Explosive · High Risk</div>
+            </div>
+          </div>
+          <div class="char-desc">Setelah <strong>15 detik</strong>, meledak otomatis: kasih damage ke lawan tapi <strong>dia sendiri juga mati!</strong></div>
+        </div>
+        <div class="char-card" data-char="doge" data-player="1">
+          <div class="check">✓</div>
+          <div class="char-top">
+            <div class="char-emoji">🐕</div>
+            <div class="char-info">
+              <div class="char-name">DOGE</div>
+              <div class="char-tag">Agile · Evasive</div>
+            </div>
+          </div>
+          <div class="char-desc">Setiap <strong>10 detik</strong>, otomatis aktif dodge — hindari 1 tumbukan berikutnya!</div>
+        </div>
+        <div class="char-card" data
