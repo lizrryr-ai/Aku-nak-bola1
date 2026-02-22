@@ -722,599 +722,88 @@
   .char-card.selected-counter { border-color: #ffdd00; background: rgba(255,220,0,0.08); box-shadow: 0 0 20px rgba(255,220,0,0.3); }
   .selected-counter .check { background: #ffdd00; opacity: 1; }
 
-  /* COLLISION FLASH */
-  .collision-flash {
-    position: absolute;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,200,0,0.6) 40%, transparent 70%);
-    animation: collisionFlashAnim 0.4s ease-out forwards;
-    pointer-events: none;
-    z-index: 22;
+  /* TANK CHAR */
+  .char-card[data-char="tank"] .char-name { color: #aaffaa; }
+  .char-card.selected-tank { border-color: #aaffaa; background: rgba(100,255,100,0.08); box-shadow: 0 0 20px rgba(100,255,100,0.3); }
+  .selected-tank .check { background: #aaffaa; opacity: 1; color: #000; }
+
+
+  /* POHON (SECRET) CHAR */
+  .char-card[data-char="pohon"] .char-name { color: #00ff44; text-shadow: 0 0 10px #00ff44; }
+  .char-card.selected-pohon { border-color: #00ff44; background: rgba(0,255,68,0.08); box-shadow: 0 0 20px rgba(0,255,68,0.4); }
+  .selected-pohon .check { background: #00ff44; opacity: 1; color: #000; }
+
+
+  /* SECRET CODE BOX */
+  .secret-box {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
   }
 
-  @keyframes collisionFlashAnim {
-    0%{ width: 0; height: 0; opacity: 1; transform: translate(-50%,-50%); }
-    100%{ width: 80px; height: 80px; opacity: 0; transform: translate(-50%,-50%); }
+  .secret-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: #333;
+    text-transform: uppercase;
   }
-</style>
-</head>
-<body>
 
-<!-- ============ PAGE 1: SELECT ============ -->
-<div class="page active" id="page-select">
-  <div class="game-title">BALL BATTLE</div>
-  <div class="subtitle">Bola Mantul · Skill Otomatis · 1v1</div>
-
-  <div class="select-arena">
-    <!-- P1 -->
-    <div class="player-panel" id="panel-p1">
-      <div class="panel-header">
-        <div class="player-dot"></div>
-        <span>Player 1</span>
-      </div>
-      <div class="chars" id="chars-p1">
-        <div class="char-card" data-char="nuke" data-player="1">
-          <div class="check">✓</div>
-          <div class="char-top">
-            <div class="char-emoji">💣</div>
-            <div class="char-info">
-              <div class="char-name">NUKE</div>
-              <div class="char-tag">Explosive · High Risk</div>
-            </div>
-          </div>
-          <div class="char-desc">Setelah <strong>15 detik</strong>, meledak otomatis: kasih damage ke lawan tapi <strong>dia sendiri juga mati!</strong></div>
-        </div>
-        <div class="char-card" data-char="doge" data-player="1">
-          <div class="check">✓</div>
-          <div class="char-top">
-            <div class="char-emoji">🐕</div>
-            <div class="char-info">
-              <div class="char-name">DOGE</div>
-              <div class="char-tag">Agile · Evasive</div>
-            </div>
-          </div>
-          <div class="char-desc">Setiap <strong>10 detik</strong>, otomatis aktif dodge — hindari 1 tumbukan berikutnya!</div>
-        </div>
-        <div class="char-card" data-char="world" data-player="1">
-          <div class="check">✓</div>
-          <div class="char-top">
-            <div class="char-emoji">🌍</div>
-            <div class="char-info">
-              <div class="char-name">THE WORLD</div>
-              <div class="char-tag">Time Stop · Stun</div>
-            </div>
-          </div>
-          <div class="char-desc">Setiap <strong>14 detik</strong>, otomatis <strong>ZA WARUDO!</strong> — stun lawan selama 3 detik. Bola lawan berhenti total!</div>
-        </div>
-        <div class="char-card" data-char="mih" data-player="1">
-          <div class="check">✓</div>
-          <div class="char-top">
-            <div class="char-emoji">⚡</div>
-            <div class="char-info">
-              <div class="char-name">MADE IN HEAVEN</div>
-              <div class="char-tag">Speed Up · Damage Reduce</div>
-            </div>
-          </div>
-          <div class="char-desc">Setiap <strong>12 detik</strong>, kecepatan otomatis nambah terus! Punya <strong>15% damage reduce</strong> tapi setiap tumbukan ngurangin <strong>12 HP lawan</strong>.</div>
-        </div>
-        <div class="char-card" data-char="counter" data-player="1">
-          <div class="check">✓</div>
-          <div class="char-top">
-            <div class="char-emoji">🛡️</div>
-            <div class="char-info">
-              <div class="char-name">COUNTER</div>
-              <div class="char-tag">Reactive · Skill Cancel</div>
-            </div>
-          </div>
-          <div class="char-desc">Pas lawan pakai skill, <strong>otomatis counter!</strong> Kedua bola saling tabrak — skill lawan langsung dibatalin. No cooldown!</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="vs-divider">VS</div>
-
-    <!-- P2 -->
-    <div class="player-panel" id="panel-p2">
-      <div class="panel-header">
-        <div class="player-dot"></div>
-        <span>Player 2</span>
-      </div>
-      <div class="chars" id="chars-p2">
-        <div class="char-card" data-char="nuke" data-player="2">
-          <div class="check">✓</div>
-          <div class="char-top">
-            <div class="char-emoji">💣</div>
-            <div class="char-info">
-              <div class="char-name">NUKE</div>
-              <div class="char-tag">Explosive · High Risk</div>
-            </div>
-          </div>
-          <div class="char-desc">Setelah <strong>15 detik</strong>, meledak otomatis: kasih damage ke lawan tapi <strong>dia sendiri juga mati!</strong></div>
-        </div>
-        <div class="char-card" data-char="doge" data-player="2">
-          <div class="check">✓</div>
-          <div class="char-top">
-            <div class="char-emoji">🐕</div>
-            <div class="char-info">
-              <div class="char-name">DOGE</div>
-              <div class="char-tag">Agile · Evasive</div>
-            </div>
-          </div>
-          <div class="char-desc">Setiap <strong>10 detik</strong>, otomatis aktif dodge — hindari 1 tumbukan berikutnya!</div>
-        </div>
-        <div class="char-card" data-char="world" data-player="2">
-          <div class="check">✓</div>
-          <div class="char-top">
-            <div class="char-emoji">🌍</div>
-            <div class="char-info">
-              <div class="char-name">THE WORLD</div>
-              <div class="char-tag">Time Stop · Stun</div>
-            </div>
-          </div>
-          <div class="char-desc">Setiap <strong>14 detik</strong>, otomatis <strong>ZA WARUDO!</strong> — stun lawan selama 3 detik. Bola lawan berhenti total!</div>
-        </div>
-        <div class="char-card" data-char="mih" data-player="2">
-          <div class="check">✓</div>
-          <div class="char-top">
-            <div class="char-emoji">⚡</div>
-            <div class="char-info">
-              <div class="char-name">MADE IN HEAVEN</div>
-              <div class="char-tag">Speed Up · Damage Reduce</div>
-            </div>
-          </div>
-          <div class="char-desc">Setiap <strong>12 detik</strong>, kecepatan otomatis nambah terus! Punya <strong>15% damage reduce</strong> tapi setiap tumbukan ngurangin <strong>12 HP lawan</strong>.</div>
-        </div>
-        <div class="char-card" data-char="counter" data-player="2">
-          <div class="check">✓</div>
-          <div class="char-top">
-            <div class="char-emoji">🛡️</div>
-            <div class="char-info">
-              <div class="char-name">COUNTER</div>
-              <div class="char-tag">Reactive · Skill Cancel</div>
-            </div>
-          </div>
-          <div class="char-desc">Pas lawan pakai skill, <strong>otomatis counter!</strong> Kedua bola saling tabrak — skill lawan langsung dibatalin. No cooldown!</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <button class="start-btn" id="start-btn" disabled>MULAI BATTLE</button>
-  <div class="select-hint" id="select-hint">Pilih karakter untuk kedua player</div>
-</div>
-
-<!-- ============ PAGE 2: BATTLE ============ -->
-<div class="page" id="page-battle">
-  <div class="hud">
-    <div class="hud-player" id="hud-p1">
-      <div class="hud-name">
-        <span id="p1-icon">?</span>
-        <span id="p1-hud-name">PLAYER 1</span>
-      </div>
-      <div class="hp-bar-wrap">
-        <div class="hp-bar" id="hp-bar-p1" style="width:100%"></div>
-      </div>
-      <div class="hp-text" id="hp-text-p1">100 HP</div>
-      <div class="skill-cd-label" id="skill-label-p1">Skill: —</div>
-    </div>
-    <div class="hud-vs">VS</div>
-    <div class="hud-player" id="hud-p2">
-      <div class="hud-name" style="justify-content:flex-end">
-        <span id="p2-hud-name">PLAYER 2</span>
-        <span id="p2-icon">?</span>
-      </div>
-      <div class="hp-bar-wrap">
-        <div class="hp-bar" id="hp-bar-p2" style="width:100%; margin-left:auto; direction:rtl"></div>
-      </div>
-      <div class="hp-text" id="hp-text-p2" style="text-align:right">100 HP</div>
-      <div class="skill-cd-label" id="skill-label-p2" style="text-align:right">Skill: —</div>
-    </div>
-  </div>
-
-  <div class="arena-wrap">
-    <div id="arena">
-      <div class="ground"><div class="ground-grid"></div></div>
-      <div class="ball" id="ball-p1">💣</div>
-      <div class="ball" id="ball-p2">💣</div>
-    </div>
-  </div>
-
-  <div class="skill-bars">
-    <div class="skill-bar-group">
-      <div class="skill-bar-label" id="cd-label-p1">Skill Cooldown P1</div>
-      <div class="cooldown-bar"><div class="cooldown-fill" id="cd-p1"></div></div>
-    </div>
-    <div class="skill-bar-group right">
-      <div class="skill-bar-label" id="cd-label-p2">Skill Cooldown P2</div>
-      <div class="cooldown-bar"><div class="cooldown-fill" id="cd-p2"></div></div>
-    </div>
-  </div>
-
-  <div class="battle-log">
-    <div class="log-inner" id="log-inner"></div>
-  </div>
-</div>
-
-<!-- WIN MODAL -->
-<div class="win-overlay" id="win-overlay">
-  <div class="win-box" id="win-box">
-    <div class="win-label">🏆 PEMENANG 🏆</div>
-    <div class="win-char" id="win-char">💣</div>
-    <div class="win-title" id="win-title">PLAYER 1</div>
-    <div class="win-msg" id="win-msg">menang telak!</div>
-    <button class="replay-btn" onclick="replay()">🔄 MAIN LAGI</button>
-  </div>
-</div>
-
-<script>
-// =========== GAME STATE ===========
-const BALL_SIZE = 60;
-const COLLISION_DMG_MIN = 8;
-const COLLISION_DMG_MAX = 18;
-const COLLISION_COOLDOWN = 600; // ms between collision damage procs
-const BALL_SPEED = 5;
-
-const state = {
-  chars: { 1: null, 2: null },
-  hp: { 1: 100, 2: 100 },
-  maxHp: 100,
-  gameOver: false,
-
-  // Ball physics
-  pos: { 1: { x: 80, y: 200 }, 2: { x: 660, y: 200 } },
-  vel: { 1: { x: 0, y: 0 },    2: { x: 0, y: 0 } },
-  arenaW: 800, arenaH: 380,
-  groundY: 50,
-
-  // Skills
-  dodge: { 1: false, 2: false },
-  stunned: { 1: false, 2: false },
-  stunTimeout: { 1: null, 2: null },
-  worldRestartTimeout: { 1: null, 2: null },
-  dogeRestartTimeout: { 1: null, 2: null },
-  mihRestartTimeout: { 1: null, 2: null },
-  mihSpeed: { 1: 5, 2: 5 },
-  counterClashing: false, // MiH current speed (matches BALL_SPEED=5)
-
-  // Timers
-  nukeInterval: { 1: null, 2: null },
-  nukeTimer: { 1: 30, 2: 30 },
-  dogeSkillInterval: { 1: null, 2: null },
-  worldSkillInterval: { 1: null, 2: null },
-  worldSkillTimer: { 1: 40, 2: 40 },
-  dogeSkillTimer: { 1: 10, 2: 10 },
-
-  skillCdInterval: { 1: null, 2: null },
-
-  lastCollision: 0,
-  rafId: null,
-};
-
-const charData = {
-  nuke:  { icon: '💣', name: 'NUKE',      skillName: 'BOMB CHARGE' },
-  doge:  { icon: '🐕', name: 'DOGE',      skillName: 'AUTO DODGE' },
-  world: { icon: '🌍', name: 'THE WORLD', skillName: 'ZA WARUDO' },
-  mih:     { icon: '⚡', name: 'MADE IN HEAVEN', skillName: 'SPEED UP' },
-  counter: { icon: '🛡️', name: 'COUNTER', skillName: 'COUNTER' },
-};
-
-// =========== SELECT LOGIC ===========
-document.querySelectorAll('.char-card').forEach(card => {
-  card.addEventListener('click', () => {
-    const player = card.dataset.player;
-    const char = card.dataset.char;
-    document.querySelectorAll(`#chars-p${player} .char-card`).forEach(c => {
-      c.classList.remove('selected-nuke', 'selected-doge', 'selected-world', 'selected-mih', 'selected-counter');
-    });
-    card.classList.add(`selected-${char}`);
-    state.chars[player] = char;
-    checkReady();
-  });
-});
-
-function checkReady() {
-  const btn = document.getElementById('start-btn');
-  const hint = document.getElementById('select-hint');
-  if (state.chars[1] && state.chars[2]) {
-    btn.disabled = false;
-    hint.textContent = `${charData[state.chars[1]].name} vs ${charData[state.chars[2]].name} — SIAP!`;
-    hint.style.color = '#888';
-  } else {
-    btn.disabled = true;
-    const missing = !state.chars[1] ? 'Player 1' : 'Player 2';
-    hint.textContent = `${missing} belum pilih karakter`;
+  .secret-inputs {
+    display: flex;
+    gap: 8px;
   }
-}
 
-document.getElementById('start-btn').addEventListener('click', startBattle);
-
-// =========== ARENA SIZE ===========
-function getArenaSize() {
-  const arena = document.getElementById('arena');
-  return { w: arena.clientWidth, h: arena.clientHeight };
-}
-
-// =========== BATTLE INIT ===========
-function startBattle() {
-  const arena = document.getElementById('arena');
-  const w = arena.clientWidth || 800;
-  const h = arena.clientHeight || 380;
-
-  state.hp = { 1: 100, 2: 100 };
-  state.dodge = { 1: false, 2: false };
-  state.stunned = { 1: false, 2: false };
-  state.mihSpeed = { 1: 5, 2: 5 }; // reset to base BALL_SPEED
-  state.counterClashing = false;
-  state.gameOver = false;
-  state.lastCollision = 0;
-
-  // Initial positions (middle height)
-  state.pos[1] = { x: 80,          y: 140 };
-  state.pos[2] = { x: w - 80 - BALL_SIZE, y: 140 };
-
-  // Initial velocities — diagonal, constant speed
-  const angle1 = Math.PI * 0.25 + Math.random() * 0.3;
-  const angle2 = Math.PI * 0.75 - Math.random() * 0.3;
-  state.vel[1] = { x: Math.cos(angle1) * BALL_SPEED, y: Math.sin(angle1) * BALL_SPEED };
-  state.vel[2] = { x: Math.cos(angle2) * BALL_SPEED, y: Math.sin(angle2) * BALL_SPEED };
-
-  document.getElementById('log-inner').innerHTML = '';
-
-  [1, 2].forEach(p => {
-    const ch = charData[state.chars[p]];
-    document.getElementById(`p${p}-icon`).textContent = ch.icon;
-    document.getElementById(`p${p}-hud-name`).textContent = `P${p} · ${ch.name}`;
-    const ballEl = document.getElementById(`ball-p${p}`);
-    ballEl.textContent = ch.icon;
-    ballEl.classList.remove('mih-active', 'stunned', 'hit');
-    document.getElementById(`cd-p${p}`).style.width = '0%';
-    updateHpBar(p);
-
-    // Clear old timers
-    clearTimeout(state.nukeInterval[p]);
-    clearTimeout(state.dogeSkillInterval[p]);
-    clearTimeout(state.worldSkillInterval[p]);
-    clearTimeout(state.skillCdInterval[p]);
-    if (state.stunTimeout[p]) clearTimeout(state.stunTimeout[p]);
-    if (state.worldRestartTimeout[p]) clearTimeout(state.worldRestartTimeout[p]);
-    if (state.dogeRestartTimeout[p]) clearTimeout(state.dogeRestartTimeout[p]);
-    if (state.mihRestartTimeout[p]) clearTimeout(state.mihRestartTimeout[p]);
-
-    const el = document.getElementById(`nuke-timer-${p}`);
-    if (el) el.remove();
-    document.getElementById(`ball-p${p}`)?.classList.remove('counter-clash', 'mih-active', 'stunned');
-  });
-
-  // Remove world overlay if any
-  const wf = document.getElementById('world-freeze');
-  if (wf) wf.remove();
-  const wt = document.getElementById('world-text');
-  if (wt) wt.remove();
-
-  showPage('battle');
-  addLog('🔔 BATTLE DIMULAI! Bola mulai mantul!', 'special');
-  addLog('💥 Tumbukan antar bola = DAMAGE!', 'special');
-
-  // Start skill timers
-  [1, 2].forEach(p => {
-    if (state.chars[p] === 'nuke')  startNukeTimer(p);
-    if (state.chars[p] === 'doge')  startDogeSkillTimer(p);
-    if (state.chars[p] === 'world') startWorldSkillTimer(p);
-    if (state.chars[p] === 'mih')   startMihTimer(p);
-    if (state.chars[p] === 'counter') {
-      document.getElementById(`skill-label-p${p}`).textContent = '🛡️ Counter: SIAP';
-      document.getElementById(`cd-p${p}`).style.width = '100%';
-    }
-  });
-
-  // Start physics loop
-  if (state.rafId) cancelAnimationFrame(state.rafId);
-  gameLoop();
-}
-
-// =========== PHYSICS LOOP ===========
-// No gravity — pure billiard bounce, constant speed
-
-function gameLoop(ts = 0) {
-  if (state.gameOver) return;
-
-  const arena = document.getElementById('arena');
-  const w = arena.clientWidth;
-  const h = arena.clientHeight;
-
-  [1, 2].forEach(p => {
-    if (state.stunned[p]) return;
-
-    // Move
-    state.pos[p].x += state.vel[p].x;
-    state.pos[p].y += state.vel[p].y;
-
-    // --- Floor bounce (ground div is 50px tall) ---
-    const floor = h - 50;
-    if (state.pos[p].y + BALL_SIZE >= floor) {
-      state.pos[p].y = floor - BALL_SIZE;
-      state.vel[p].y = -Math.abs(state.vel[p].y);
-    }
-
-    // --- Ceiling bounce ---
-    if (state.pos[p].y <= 0) {
-      state.pos[p].y = 0;
-      state.vel[p].y = Math.abs(state.vel[p].y);
-    }
-
-    // --- Left wall bounce ---
-    if (state.pos[p].x <= 0) {
-      state.pos[p].x = 0;
-      state.vel[p].x = Math.abs(state.vel[p].x);
-    }
-
-    // --- Right wall bounce ---
-    if (state.pos[p].x + BALL_SIZE >= w) {
-      state.pos[p].x = w - BALL_SIZE;
-      state.vel[p].x = -Math.abs(state.vel[p].x);
-    }
-
-    // Lock to per-player speed (MiH gets faster over time)
-    const targetSpd = (state.chars[p] === 'mih') ? state.mihSpeed[p] : BALL_SPEED;
-    const spd = Math.sqrt(state.vel[p].x**2 + state.vel[p].y**2);
-    if (spd > 0.01) {
-      state.vel[p].x = (state.vel[p].x / spd) * targetSpd;
-      state.vel[p].y = (state.vel[p].y / spd) * targetSpd;
-    }
-
-    // Update DOM
-    const ball = document.getElementById(`ball-p${p}`);
-    ball.style.left = state.pos[p].x + 'px';
-    ball.style.top  = state.pos[p].y + 'px';
-
-    // Update stun stars position
-    const stars = document.getElementById(`stun-stars-${p}`);
-    if (stars) {
-      stars.style.left = (state.pos[p].x + BALL_SIZE/2 - 15) + 'px';
-      stars.style.top  = (state.pos[p].y - 28) + 'px';
-    }
-  });
-
-  // Ball-ball collision
-  checkBallCollision();
-
-  state.rafId = requestAnimationFrame(gameLoop);
-}
-
-function checkBallCollision() {
-  const x1 = state.pos[1].x + BALL_SIZE / 2;
-  const y1 = state.pos[1].y + BALL_SIZE / 2;
-  const x2 = state.pos[2].x + BALL_SIZE / 2;
-  const y2 = state.pos[2].y + BALL_SIZE / 2;
-
-  const dist = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
-  if (dist < BALL_SIZE) {
-    const angle = Math.atan2(y2-y1, x2-x1);
-    const overlap = BALL_SIZE - dist;
-
-    // Only push non-stunned balls
-    if (!state.stunned[1]) {
-      state.pos[1].x -= Math.cos(angle) * overlap/2;
-      state.pos[1].y -= Math.sin(angle) * overlap/2;
-    }
-    if (!state.stunned[2]) {
-      state.pos[2].x += Math.cos(angle) * overlap/2;
-      state.pos[2].y += Math.sin(angle) * overlap/2;
-    }
-
-    // Reflect: if target stunned, attacker fully bounces off (wall-like)
-    const nx = (x2-x1)/dist;
-    const ny = (y2-y1)/dist;
-
-    if (state.stunned[1] && !state.stunned[2]) {
-      // P1 stunned, P2 bounces off
-      const dot2 = state.vel[2].x * nx + state.vel[2].y * ny;
-      state.vel[2].x -= 2 * dot2 * nx;
-      state.vel[2].y -= 2 * dot2 * ny;
-      const spd2 = Math.sqrt(state.vel[2].x**2 + state.vel[2].y**2);
-      if (spd2 > 0.01) { state.vel[2].x = (state.vel[2].x/spd2)*BALL_SPEED; state.vel[2].y = (state.vel[2].y/spd2)*BALL_SPEED; }
-    } else if (state.stunned[2] && !state.stunned[1]) {
-      // P2 stunned, P1 bounces off
-      const dot1 = state.vel[1].x * (-nx) + state.vel[1].y * (-ny);
-      state.vel[1].x -= 2 * dot1 * (-nx);
-      state.vel[1].y -= 2 * dot1 * (-ny);
-      const spd1 = Math.sqrt(state.vel[1].x**2 + state.vel[1].y**2);
-      if (spd1 > 0.01) { state.vel[1].x = (state.vel[1].x/spd1)*BALL_SPEED; state.vel[1].y = (state.vel[1].y/spd1)*BALL_SPEED; }
-    } else {
-      // Normal elastic collision
-      const dvx = state.vel[1].x - state.vel[2].x;
-      const dvy = state.vel[1].y - state.vel[2].y;
-      const dot = dvx*nx + dvy*ny;
-      if (dot > 0) {
-        state.vel[1].x -= dot * nx;
-        state.vel[1].y -= dot * ny;
-        state.vel[2].x += dot * nx;
-        state.vel[2].y += dot * ny;
-        [1,2].forEach(p => {
-          const spd = Math.sqrt(state.vel[p].x**2 + state.vel[p].y**2);
-          if (spd > 0.01) { state.vel[p].x = (state.vel[p].x/spd)*BALL_SPEED; state.vel[p].y = (state.vel[p].y/spd)*BALL_SPEED; }
-        });
-      }
-    }
-
-
-
-    // Deal collision damage (with cooldown)
-    const now = Date.now();
-    if (now - state.lastCollision > COLLISION_COOLDOWN) {
-      state.lastCollision = now;
-      onBallCollision(x1 + (x2-x1)/2, y1 + (y2-y1)/2);
-    }
+  .secret-digit {
+    width: 44px;
+    height: 52px;
+    background: #0d0d18;
+    border: 1px solid #222;
+    border-radius: 8px;
+    text-align: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: #fff;
+    outline: none;
+    caret-color: transparent;
+    text-transform: uppercase;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
-}
 
-function onBallCollision(cx, cy) {
-  if (state.gameOver) return;
+  .secret-digit:focus {
+    border-color: #444;
+    box-shadow: 0 0 10px rgba(255,255,255,0.05);
+  }
 
-  // Flash at collision point
-  const arena = document.getElementById('arena');
-  const arenaRect = arena.getBoundingClientRect();
-  const flash = document.createElement('div');
-  flash.className = 'collision-flash';
-  flash.style.left = cx + 'px';
-  flash.style.top  = cy + 'px';
-  arena.appendChild(flash);
-  setTimeout(() => flash.remove(), 400);
+  .secret-digit.correct {
+    border-color: #00ff44;
+    box-shadow: 0 0 12px rgba(0,255,68,0.4);
+    color: #00ff44;
+  }
 
-  // Deal damage to both — check dodge, stun x3
-  [1, 2].forEach(target => {
-    if (state.chars[target] === 'doge' && state.dodge[target] && !state.stunned[target]) {
-      // Consume dodge
-      state.dodge[target] = false;
-      clearDodgeVisual(target);
-      // Cancel the auto-expire timeout, restart cooldown now
-      if (state.dogeRestartTimeout[target]) clearTimeout(state.dogeRestartTimeout[target]);
-      startDogeSkillTimer(target);
-      showMiss(target);
-      addLog(`🐕 Player ${target} DODGE tumbukan!`, `p${target}`);
-      return;
-    }
-    const attacker = target === 1 ? 2 : 1;
-    // MiH always deals 12 flat dmg when it collides
-    let dmg = (state.chars[attacker] === 'mih')
-      ? 12
-      : Math.floor(Math.random() * (COLLISION_DMG_MAX - COLLISION_DMG_MIN + 1)) + COLLISION_DMG_MIN;
-    // x3 damage if target is stunned
-    if (state.stunned[target]) {
-      dmg = dmg * 3;
-      addLog(`💥 STUN BONUS! P${target} kena ${dmg} dmg (x3)! 🌍`, 'world');
-    } else if (state.chars[attacker] === 'mih') {
-      addLog(`⚡ MiH serang! P${target} kena ${dmg} dmg!`, `p${attacker}`);
-    } else {
-      addLog(`💥 Tumbukan! P${target} kena ${dmg} dmg!`, `p${target}`);
-    }
-    dealDamage(target, dmg);
-  });
-}
+  .secret-digit.wrong {
+    border-color: #ff4444;
+    animation: shakeDigit 0.3s ease;
+  }
 
-// =========== COUNTER SYSTEM ===========
-// Returns true if counter activated (skill should be cancelled)
-function tryCounter(skillUser) {
-  const opponent = skillUser === 1 ? 2 : 1;
-  if (state.chars[opponent] !== 'counter') return false;
-  if (state.gameOver) return false;
-  if (state.counterClashing) return false;
+  @keyframes shakeDigit {
+    0%,100%{ transform: translateX(0); }
+    25%{ transform: translateX(-4px); }
+    75%{ transform: translateX(4px); }
+  }
 
-  state.counterClashing = true;
-
-  addLog('🛡️ COUNTER! P' + opponent + ' batalin skill P' + skillUser + '!', 'special');
-
-  // Show COUNTER! text
-  const arena = document.getElementById('arena');
-  const ct = document.createElement('div');
-  ct.className = 'counter-text';
-  ct.textContent = 'COUNTER!';
-  arena.appendChild(ct);
-  setTimeout(() => ct.remove(), 800);
-
-  // Flash counter player ball only
-  const cBall = document.getElementById('ball-p' + opponent);
-  cBall.classList.add('counter-clash');
+  /* SECRET UNLOCK NOTIF */
+  .secret-unlock {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 6px;
+    color: #00ff44;
+    text-shadow: 0 0 nter-clash');
   setTimeout(() => cBall.classList.remove('counter-clash'), 400);
 
   // Deal damage to skill user
