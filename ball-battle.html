@@ -1,0 +1,1646 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BALL BATTLE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap');
+
+  :root {
+    --p1: #00e5ff;
+    --p2: #ff4444;
+    --bg: #0a0a0f;
+    --panel: #111118;
+    --border: #222233;
+    --gold: #ffd700;
+    --nuke-color: #ff6b00;
+    --doge-color: #00ff88;
+    --world-color: #cc44ff;
+    --mih-color: #ffffff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Rajdhani', sans-serif;
+    color: #fff;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .page { display: none; min-height: 100vh; }
+  .page.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+  /* ===== SELECT PAGE ===== */
+  #page-select {
+    padding: 20px;
+    background: radial-gradient(ellipse at 50% 0%, #1a0033 0%, var(--bg) 60%);
+  }
+
+  .game-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 8vw, 96px);
+    text-align: center;
+    letter-spacing: 8px;
+    background: linear-gradient(90deg, var(--p1), #fff, var(--p2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+    animation: titlePulse 3s ease-in-out infinite;
+  }
+
+  @keyframes titlePulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.3); }
+  }
+
+  .subtitle {
+    text-align: center;
+    font-size: 14px;
+    letter-spacing: 4px;
+    color: #555;
+    margin-bottom: 40px;
+    text-transform: uppercase;
+  }
+
+  .select-arena {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 960px;
+  }
+
+  .player-panel {
+    flex: 1;
+    min-width: 260px;
+    max-width: 380px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--panel);
+    position: relative;
+  }
+
+  .player-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 2px 2px 0 0;
+  }
+
+  #panel-p1::before { background: var(--p1); box-shadow: 0 0 15px var(--p1); }
+  #panel-p2::before { background: var(--p2); box-shadow: 0 0 15px var(--p2); }
+
+  .panel-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .player-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    animation: blink 1.2s ease-in-out infinite;
+  }
+
+  #panel-p1 .player-dot { background: var(--p1); box-shadow: 0 0 8px var(--p1); }
+  #panel-p2 .player-dot { background: var(--p2); box-shadow: 0 0 8px var(--p2); }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .panel-header span {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 3px;
+  }
+
+  #panel-p1 .panel-header span { color: var(--p1); }
+  #panel-p2 .panel-header span { color: var(--p2); }
+
+  .chars {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .char-card {
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .char-card:hover { border-color: #444; transform: translateX(4px); }
+
+  .char-card.selected-nuke  { border-color: var(--nuke-color);  background: rgba(255,107,0,0.1);   box-shadow: 0 0 20px rgba(255,107,0,0.2); }
+  .char-card.selected-doge  { border-color: var(--doge-color);  background: rgba(0,255,136,0.1);   box-shadow: 0 0 20px rgba(0,255,136,0.2); }
+  .char-card.selected-world { border-color: var(--world-color); background: rgba(204,68,255,0.1);  box-shadow: 0 0 20px rgba(204,68,255,0.2); }
+  .char-card.selected-mih   { border-color: #fff; background: rgba(255,255,255,0.08); box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+
+  .char-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .char-emoji {
+    font-size: 36px;
+    line-height: 1;
+    animation: floatEmoji 2.5s ease-in-out infinite;
+  }
+
+  @keyframes floatEmoji {
+    0%,100%{ transform: translateY(0); }
+    50%{ transform: translateY(-5px); }
+  }
+
+  .char-info { flex: 1; }
+
+  .char-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+  }
+
+  .char-card[data-char="nuke"]  .char-name { color: var(--nuke-color); }
+  .char-card[data-char="doge"]  .char-name { color: var(--doge-color); }
+  .char-card[data-char="world"] .char-name { color: var(--world-color); }
+
+  .char-tag {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #666;
+    text-transform: uppercase;
+  }
+
+  .char-desc {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.5;
+  }
+
+  .check {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .selected-nuke  .check { background: var(--nuke-color);  opacity: 1; }
+  .selected-doge  .check { background: var(--doge-color);  opacity: 1; }
+  .selected-world .check { background: var(--world-color); opacity: 1; }
+
+  .vs-divider {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 60px;
+    color: #333;
+    text-shadow: 0 0 30px rgba(255,255,255,0.1);
+    align-self: center;
+    flex-shrink: 0;
+  }
+
+  .start-btn {
+    margin-top: 30px;
+    padding: 16px 60px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 5px;
+    border: 2px solid #fff;
+    background: transparent;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .start-btn:disabled { border-color: #333; color: #444; cursor: not-allowed; }
+  .start-btn:not(:disabled):hover { background: #fff; color: #000; box-shadow: 0 0 40px rgba(255,255,255,0.3); transform: scale(1.03); }
+
+  .select-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    color: #444;
+    text-transform: uppercase;
+  }
+
+  /* ===== BATTLE PAGE ===== */
+  #page-battle {
+    flex-direction: column;
+    padding: 20px;
+    background: radial-gradient(ellipse at 50% 50%, #0d0d20 0%, var(--bg) 70%);
+    gap: 0;
+  }
+
+  .hud {
+    display: flex;
+    width: 100%;
+    max-width: 800px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .hud-player {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .hud-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #hud-p1 .hud-name { color: var(--p1); }
+  #hud-p2 .hud-name { color: var(--p2); justify-content: flex-end; }
+
+  .hp-bar-wrap {
+    height: 12px;
+    background: #111;
+    border-radius: 6px;
+    border: 1px solid #222;
+    overflow: hidden;
+  }
+
+  .hp-bar { height: 100%; border-radius: 6px; transition: width 0.3s; }
+  #hp-bar-p1 { background: linear-gradient(90deg, #005577, var(--p1)); box-shadow: 0 0 10px var(--p1); }
+  #hp-bar-p2 { background: linear-gradient(90deg, var(--p2), #770000); box-shadow: 0 0 10px var(--p2); margin-left: auto; }
+
+  .hp-text { font-size: 13px; font-weight: 700; color: #aaa; }
+  #hud-p2 .hp-text { text-align: right; }
+
+  /* Skill cooldown label under HP */
+  .skill-cd-label {
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #555;
+    text-transform: uppercase;
+  }
+  #hud-p2 .skill-cd-label { text-align: right; }
+
+  .hud-vs {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    color: #333;
+    flex-shrink: 0;
+    padding: 0 10px;
+  }
+
+  /* ARENA */
+  .arena-wrap {
+    width: 100%;
+    max-width: 800px;
+    position: relative;
+  }
+
+  #arena {
+    width: 100%;
+    height: 380px;
+    background: #0a0a12;
+    border: 1px solid #1e1e33;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #arena::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 80%, rgba(255,255,255,0.02) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .ground {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 50px;
+    background: linear-gradient(180deg, #111122, #0d0d1a);
+    border-top: 2px solid #1e1e3a;
+  }
+
+  .ground-grid {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 100%;
+  }
+
+  /* BALLS */
+  .ball {
+    position: absolute;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    user-select: none;
+    z-index: 10;
+    transition: box-shadow 0.2s;
+  }
+
+  #ball-p1 {
+    width: 60px; height: 60px;
+    background: radial-gradient(circle at 35% 35%, #66ffff, var(--p1), #003344);
+    box-shadow: 0 0 20px rgba(0,229,255,0.5), 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  #ball-p2 {
+    width: 60px; height: 60px;
+    background: radial-gradient(circle at 35% 35%, #ffaaaa, var(--p2), #440000);
+    box-shadow: 0 0 20px rgba(255,68,68,0.5), 0 4px 10px rgba(0,0,0,0.5);
+  }
+
+  .ball.mih-active {
+    animation: mihGlow 0.4s ease-in-out infinite alternate;
+  }
+
+  @keyframes mihGlow {
+    0%{ box-shadow: 0 0 15px #fff, 0 0 30px #aaf, 0 0 60px #88f; }
+    100%{ box-shadow: 0 0 30px #fff, 0 0 60px #ccf, 0 0 100px #aaf; }
+  }
+
+  .ball.hit { animation: hitAnim 0.3s ease; }
+
+  @keyframes hitAnim {
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(0.85); filter: brightness(3); }
+  }
+
+  .ball.stunned {
+    animation: stunAnim 0.5s ease-in-out infinite;
+    filter: brightness(0.5) sepia(1) hue-rotate(200deg);
+  }
+
+  @keyframes stunAnim {
+    0%,100%{ transform: rotate(-8deg) scale(0.95); }
+    50%{ transform: rotate(8deg) scale(1.05); }
+  }
+
+  /* STUN STARS */
+  .stun-stars {
+    position: absolute;
+    pointer-events: none;
+    z-index: 25;
+    font-size: 20px;
+    animation: starsFloat 0.6s ease-in-out infinite alternate;
+  }
+
+  @keyframes starsFloat {
+    0%{ transform: translateY(0) rotate(-10deg); }
+    100%{ transform: translateY(-8px) rotate(10deg); }
+  }
+
+  /* NUKE EXPLOSION */
+  .explosion {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, #ff6b00 30%, #ff0000 60%, transparent 100%);
+    animation: explodeAnim 0.6s ease-out forwards;
+    pointer-events: none;
+    z-index: 20;
+  }
+
+  @keyframes explodeAnim {
+    0%{ width: 0; height: 0; opacity: 1; transform: translate(-50%, -50%); }
+    60%{ opacity: 0.8; }
+    100%{ width: 250px; height: 250px; opacity: 0; transform: translate(-50%, -50%); }
+  }
+
+  /* THE WORLD EFFECT */
+  .world-freeze {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(204,68,255,0.15) 0%, rgba(100,0,200,0.05) 60%, transparent 100%);
+    animation: worldPulse 0.8s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 15;
+    border-radius: 12px;
+  }
+
+  @keyframes worldPulse {
+    0%,100%{ opacity: 0.6; }
+    50%{ opacity: 1; }
+  }
+
+  .world-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    letter-spacing: 6px;
+    color: var(--world-color);
+    text-shadow: 0 0 40px var(--world-color), 0 0 80px rgba(204,68,255,0.5);
+    animation: worldTextAnim 0.4s ease-out;
+    pointer-events: none;
+    z-index: 16;
+    white-space: nowrap;
+  }
+
+  @keyframes worldTextAnim {
+    0%{ transform: translate(-50%,-50%) scale(0.3); opacity: 0; }
+    60%{ transform: translate(-50%,-50%) scale(1.1); opacity: 1; }
+    100%{ transform: translate(-50%,-50%) scale(1); opacity: 1; }
+  }
+
+  /* DAMAGE POPUP */
+  .dmg-popup {
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    animation: popupAnim 0.8s ease-out forwards;
+    pointer-events: none;
+    z-index: 30;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+    transform: translateX(-50%);
+  }
+
+  @keyframes popupAnim {
+    0%{ transform: translateX(-50%) translateY(0); opacity: 1; }
+    100%{ transform: translateX(-50%) translateY(-60px); opacity: 0; }
+  }
+
+  .dmg-miss {
+    position: absolute;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    color: var(--doge-color);
+    animation: popupAnim 0.8s ease-out forwards;
+    pointer-events: none;
+    z-index: 30;
+    text-shadow: 0 0 15px var(--doge-color);
+    transform: translateX(-50%);
+  }
+
+  /* NUKE TIMER */
+  .nuke-timer {
+    position: absolute;
+    top: 10px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255,107,0,0.15);
+    border: 1px solid var(--nuke-color);
+    color: var(--nuke-color);
+    animation: timerBlink 1s ease-in-out infinite;
+    z-index: 20;
+  }
+
+  @keyframes timerBlink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* LOG */
+  .battle-log {
+    width: 100%;
+    max-width: 800px;
+    margin-top: 10px;
+    height: 68px;
+    overflow: hidden;
+  }
+
+  .log-inner {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 4px;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .log-entry {
+    font-size: 13px;
+    color: #666;
+    letter-spacing: 1px;
+    animation: logFade 0.3s ease;
+  }
+
+  @keyframes logFade { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+
+  .log-entry.p1 { color: var(--p1); }
+  .log-entry.p2 { color: var(--p2); }
+  .log-entry.special { color: var(--gold); }
+  .log-entry.world { color: var(--world-color); }
+
+  /* SKILL COOLDOWN BARS */
+  .skill-bars {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    gap: 16px;
+  }
+
+  .skill-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .skill-bar-group.right { align-items: flex-end; }
+
+  .skill-bar-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #555;
+    text-transform: uppercase;
+  }
+
+  .cooldown-bar {
+    height: 5px;
+    border-radius: 3px;
+    width: 100%;
+    background: #1a1a2e;
+    overflow: hidden;
+  }
+
+  .cooldown-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.1s linear;
+    width: 0%;
+  }
+
+  #cd-p1 { background: var(--p1); }
+  #cd-p2 { background: var(--p2); }
+
+  /* WIN MODAL */
+  .win-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(6px);
+  }
+
+  .win-overlay.show { display: flex; }
+
+  .win-box {
+    text-align: center;
+    padding: 50px 60px;
+    border-radius: 16px;
+    border: 1px solid #333;
+    background: var(--panel);
+    position: relative;
+    overflow: hidden;
+    animation: winPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes winPop {
+    from{ transform: scale(0.5); opacity: 0; }
+    to{ transform: scale(1); opacity: 1; }
+  }
+
+  .win-label {
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #555;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .win-char {
+    font-size: 50px;
+    margin-bottom: 20px;
+    animation: floatEmoji 1.5s ease-in-out infinite;
+  }
+
+  .win-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    letter-spacing: 6px;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .win-msg {
+    font-size: 16px;
+    color: #888;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+  }
+
+  .replay-btn {
+    padding: 14px 50px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 4px;
+    background: transparent;
+    border: 2px solid #fff;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .replay-btn:hover { background: #fff; color: #000; box-shadow: 0 0 30px rgba(255,255,255,0.3); }
+
+  /* CONFETTI */
+  .confetti-piece {
+    position: fixed;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+    z-index: 600;
+  }
+
+  @keyframes confettiFall {
+    0%{ transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100%{ transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* COLLISION FLASH */
+  .collision-flash {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,200,0,0.6) 40%, transparent 70%);
+    animation: collisionFlashAnim 0.4s ease-out forwards;
+    pointer-events: none;
+    z-index: 22;
+  }
+
+  @keyframes collisionFlashAnim {
+    0%{ width: 0; height: 0; opacity: 1; transform: translate(-50%,-50%); }
+    100%{ width: 80px; height: 80px; opacity: 0; transform: translate(-50%,-50%); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1: SELECT ============ -->
+<div class="page active" id="page-select">
+  <div class="game-title">BALL BATTLE</div>
+  <div class="subtitle">Bola Mantul · Skill Otomatis · 1v1</div>
+
+  <div class="select-arena">
+    <!-- P1 -->
+    <div class="player-panel" id="panel-p1">
+      <div class="panel-header">
+        <div class="player-dot"></div>
+        <span>Player 1</span>
+      </div>
+      <div class="chars" id="chars-p1">
+        <div class="char-card" data-char="nuke" data-player="1">
+          <div class="check">✓</div>
+          <div class="char-top">
+            <div class="char-emoji">💣</div>
+            <div class="char-info">
+              <div class="char-name">NUKE</div>
+              <div class="char-tag">Explosive · High Risk</div>
+            </div>
+          </div>
+          <div class="char-desc">Setelah <strong>15 detik</strong>, meledak otomatis: kasih damage ke lawan tapi <strong>dia sendiri juga mati!</strong></div>
+        </div>
+        <div class="char-card" data-char="doge" data-player="1">
+          <div class="check">✓</div>
+          <div class="char-top">
+            <div class="char-emoji">🐕</div>
+            <div class="char-info">
+              <div class="char-name">DOGE</div>
+              <div class="char-tag">Agile · Evasive</div>
+            </div>
+          </div>
+          <div class="char-desc">Setiap <strong>10 detik</strong>, otomatis aktif dodge — hindari 1 tumbukan berikutnya!</div>
+        </div>
+        <div class="char-card" data-char="world" data-player="1">
+          <div class="check">✓</div>
+          <div class="char-top">
+            <div class="char-emoji">🌍</div>
+            <div class="char-info">
+              <div class="char-name">THE WORLD</div>
+              <div class="char-tag">Time Stop · Stun</div>
+            </div>
+          </div>
+          <div class="char-desc">Setiap <strong>14 detik</strong>, otomatis <strong>ZA WARUDO!</strong> — stun lawan selama 3 detik. Bola lawan berhenti total!</div>
+        </div>
+        <div class="char-card" data-char="mih" data-player="1">
+          <div class="check">✓</div>
+          <div class="char-top">
+            <div class="char-emoji">⚡</div>
+            <div class="char-info">
+              <div class="char-name">MADE IN HEAVEN</div>
+              <div class="char-tag">Speed Up · Damage Reduce</div>
+            </div>
+          </div>
+          <div class="char-desc">Setiap <strong>12 detik</strong>, kecepatan otomatis nambah terus! Punya <strong>15% damage reduce</strong> tapi setiap tumbukan ngurangin <strong>12 HP lawan</strong>.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="vs-divider">VS</div>
+
+    <!-- P2 -->
+    <div class="player-panel" id="panel-p2">
+      <div class="panel-header">
+        <div class="player-dot"></div>
+        <span>Player 2</span>
+      </div>
+      <div class="chars" id="chars-p2">
+        <div class="char-card" data-char="nuke" data-player="2">
+          <div class="check">✓</div>
+          <div class="char-top">
+            <div class="char-emoji">💣</div>
+            <div class="char-info">
+              <div class="char-name">NUKE</div>
+              <div class="char-tag">Explosive · High Risk</div>
+            </div>
+          </div>
+          <div class="char-desc">Setelah <strong>15 detik</strong>, meledak otomatis: kasih damage ke lawan tapi <strong>dia sendiri juga mati!</strong></div>
+        </div>
+        <div class="char-card" data-char="doge" data-player="2">
+          <div class="check">✓</div>
+          <div class="char-top">
+            <div class="char-emoji">🐕</div>
+            <div class="char-info">
+              <div class="char-name">DOGE</div>
+              <div class="char-tag">Agile · Evasive</div>
+            </div>
+          </div>
+          <div class="char-desc">Setiap <strong>10 detik</strong>, otomatis aktif dodge — hindari 1 tumbukan berikutnya!</div>
+        </div>
+        <div class="char-card" data-char="world" data-player="2">
+          <div class="check">✓</div>
+          <div class="char-top">
+            <div class="char-emoji">🌍</div>
+            <div class="char-info">
+              <div class="char-name">THE WORLD</div>
+              <div class="char-tag">Time Stop · Stun</div>
+            </div>
+          </div>
+          <div class="char-desc">Setiap <strong>14 detik</strong>, otomatis <strong>ZA WARUDO!</strong> — stun lawan selama 3 detik. Bola lawan berhenti total!</div>
+        </div>
+        <div class="char-card" data-char="mih" data-player="2">
+          <div class="check">✓</div>
+          <div class="char-top">
+            <div class="char-emoji">⚡</div>
+            <div class="char-info">
+              <div class="char-name">MADE IN HEAVEN</div>
+              <div class="char-tag">Speed Up · Damage Reduce</div>
+            </div>
+          </div>
+          <div class="char-desc">Setiap <strong>12 detik</strong>, kecepatan otomatis nambah terus! Punya <strong>15% damage reduce</strong> tapi setiap tumbukan ngurangin <strong>12 HP lawan</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn" disabled>MULAI BATTLE</button>
+  <div class="select-hint" id="select-hint">Pilih karakter untuk kedua player</div>
+</div>
+
+<!-- ============ PAGE 2: BATTLE ============ -->
+<div class="page" id="page-battle">
+  <div class="hud">
+    <div class="hud-player" id="hud-p1">
+      <div class="hud-name">
+        <span id="p1-icon">?</span>
+        <span id="p1-hud-name">PLAYER 1</span>
+      </div>
+      <div class="hp-bar-wrap">
+        <div class="hp-bar" id="hp-bar-p1" style="width:100%"></div>
+      </div>
+      <div class="hp-text" id="hp-text-p1">100 HP</div>
+      <div class="skill-cd-label" id="skill-label-p1">Skill: —</div>
+    </div>
+    <div class="hud-vs">VS</div>
+    <div class="hud-player" id="hud-p2">
+      <div class="hud-name" style="justify-content:flex-end">
+        <span id="p2-hud-name">PLAYER 2</span>
+        <span id="p2-icon">?</span>
+      </div>
+      <div class="hp-bar-wrap">
+        <div class="hp-bar" id="hp-bar-p2" style="width:100%; margin-left:auto; direction:rtl"></div>
+      </div>
+      <div class="hp-text" id="hp-text-p2" style="text-align:right">100 HP</div>
+      <div class="skill-cd-label" id="skill-label-p2" style="text-align:right">Skill: —</div>
+    </div>
+  </div>
+
+  <div class="arena-wrap">
+    <div id="arena">
+      <div class="ground"><div class="ground-grid"></div></div>
+      <div class="ball" id="ball-p1">💣</div>
+      <div class="ball" id="ball-p2">💣</div>
+    </div>
+  </div>
+
+  <div class="skill-bars">
+    <div class="skill-bar-group">
+      <div class="skill-bar-label" id="cd-label-p1">Skill Cooldown P1</div>
+      <div class="cooldown-bar"><div class="cooldown-fill" id="cd-p1"></div></div>
+    </div>
+    <div class="skill-bar-group right">
+      <div class="skill-bar-label" id="cd-label-p2">Skill Cooldown P2</div>
+      <div class="cooldown-bar"><div class="cooldown-fill" id="cd-p2"></div></div>
+    </div>
+  </div>
+
+  <div class="battle-log">
+    <div class="log-inner" id="log-inner"></div>
+  </div>
+</div>
+
+<!-- WIN MODAL -->
+<div class="win-overlay" id="win-overlay">
+  <div class="win-box" id="win-box">
+    <div class="win-label">🏆 PEMENANG 🏆</div>
+    <div class="win-char" id="win-char">💣</div>
+    <div class="win-title" id="win-title">PLAYER 1</div>
+    <div class="win-msg" id="win-msg">menang telak!</div>
+    <button class="replay-btn" onclick="replay()">🔄 MAIN LAGI</button>
+  </div>
+</div>
+
+<script>
+// =========== GAME STATE ===========
+const BALL_SIZE = 60;
+const COLLISION_DMG_MIN = 8;
+const COLLISION_DMG_MAX = 18;
+const COLLISION_COOLDOWN = 600; // ms between collision damage procs
+const BALL_SPEED = 5;
+
+const state = {
+  chars: { 1: null, 2: null },
+  hp: { 1: 100, 2: 100 },
+  maxHp: 100,
+  gameOver: false,
+
+  // Ball physics
+  pos: { 1: { x: 80, y: 200 }, 2: { x: 660, y: 200 } },
+  vel: { 1: { x: 0, y: 0 },    2: { x: 0, y: 0 } },
+  arenaW: 800, arenaH: 380,
+  groundY: 50,
+
+  // Skills
+  dodge: { 1: false, 2: false },
+  stunned: { 1: false, 2: false },
+  stunTimeout: { 1: null, 2: null },
+  worldRestartTimeout: { 1: null, 2: null },
+  dogeRestartTimeout: { 1: null, 2: null },
+  mihRestartTimeout: { 1: null, 2: null },
+  mihSpeed: { 1: 5, 2: 5 }, // MiH current speed (matches BALL_SPEED=5)
+
+  // Timers
+  nukeInterval: { 1: null, 2: null },
+  nukeTimer: { 1: 30, 2: 30 },
+  dogeSkillInterval: { 1: null, 2: null },
+  worldSkillInterval: { 1: null, 2: null },
+  worldSkillTimer: { 1: 40, 2: 40 },
+  dogeSkillTimer: { 1: 10, 2: 10 },
+
+  skillCdInterval: { 1: null, 2: null },
+
+  lastCollision: 0,
+  rafId: null,
+};
+
+const charData = {
+  nuke:  { icon: '💣', name: 'NUKE',      skillName: 'BOMB CHARGE' },
+  doge:  { icon: '🐕', name: 'DOGE',      skillName: 'AUTO DODGE' },
+  world: { icon: '🌍', name: 'THE WORLD', skillName: 'ZA WARUDO' },
+  mih:   { icon: '⚡', name: 'MADE IN HEAVEN', skillName: 'SPEED UP' },
+};
+
+// =========== SELECT LOGIC ===========
+document.querySelectorAll('.char-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const player = card.dataset.player;
+    const char = card.dataset.char;
+    document.querySelectorAll(`#chars-p${player} .char-card`).forEach(c => {
+      c.classList.remove('selected-nuke', 'selected-doge', 'selected-world', 'selected-mih');
+    });
+    card.classList.add(`selected-${char}`);
+    state.chars[player] = char;
+    checkReady();
+  });
+});
+
+function checkReady() {
+  const btn = document.getElementById('start-btn');
+  const hint = document.getElementById('select-hint');
+  if (state.chars[1] && state.chars[2]) {
+    btn.disabled = false;
+    hint.textContent = `${charData[state.chars[1]].name} vs ${charData[state.chars[2]].name} — SIAP!`;
+    hint.style.color = '#888';
+  } else {
+    btn.disabled = true;
+    const missing = !state.chars[1] ? 'Player 1' : 'Player 2';
+    hint.textContent = `${missing} belum pilih karakter`;
+  }
+}
+
+document.getElementById('start-btn').addEventListener('click', startBattle);
+
+// =========== ARENA SIZE ===========
+function getArenaSize() {
+  const arena = document.getElementById('arena');
+  return { w: arena.clientWidth, h: arena.clientHeight };
+}
+
+// =========== BATTLE INIT ===========
+function startBattle() {
+  const arena = document.getElementById('arena');
+  const w = arena.clientWidth || 800;
+  const h = arena.clientHeight || 380;
+
+  state.hp = { 1: 100, 2: 100 };
+  state.dodge = { 1: false, 2: false };
+  state.stunned = { 1: false, 2: false };
+  state.mihSpeed = { 1: 5, 2: 5 }; // reset to base BALL_SPEED
+  state.gameOver = false;
+  state.lastCollision = 0;
+
+  // Initial positions (middle height)
+  state.pos[1] = { x: 80,          y: 140 };
+  state.pos[2] = { x: w - 80 - BALL_SIZE, y: 140 };
+
+  // Initial velocities — diagonal, constant speed
+  const angle1 = Math.PI * 0.25 + Math.random() * 0.3;
+  const angle2 = Math.PI * 0.75 - Math.random() * 0.3;
+  state.vel[1] = { x: Math.cos(angle1) * BALL_SPEED, y: Math.sin(angle1) * BALL_SPEED };
+  state.vel[2] = { x: Math.cos(angle2) * BALL_SPEED, y: Math.sin(angle2) * BALL_SPEED };
+
+  document.getElementById('log-inner').innerHTML = '';
+
+  [1, 2].forEach(p => {
+    const ch = charData[state.chars[p]];
+    document.getElementById(`p${p}-icon`).textContent = ch.icon;
+    document.getElementById(`p${p}-hud-name`).textContent = `P${p} · ${ch.name}`;
+    const ballEl = document.getElementById(`ball-p${p}`);
+    ballEl.textContent = ch.icon;
+    ballEl.classList.remove('mih-active', 'stunned', 'hit');
+    document.getElementById(`cd-p${p}`).style.width = '0%';
+    updateHpBar(p);
+
+    // Clear old timers
+    clearTimeout(state.nukeInterval[p]);
+    clearTimeout(state.dogeSkillInterval[p]);
+    clearTimeout(state.worldSkillInterval[p]);
+    clearTimeout(state.skillCdInterval[p]);
+    if (state.stunTimeout[p]) clearTimeout(state.stunTimeout[p]);
+    if (state.worldRestartTimeout[p]) clearTimeout(state.worldRestartTimeout[p]);
+    if (state.dogeRestartTimeout[p]) clearTimeout(state.dogeRestartTimeout[p]);
+    if (state.mihRestartTimeout[p]) clearTimeout(state.mihRestartTimeout[p]);
+
+    const el = document.getElementById(`nuke-timer-${p}`);
+    if (el) el.remove();
+  });
+
+  // Remove world overlay if any
+  const wf = document.getElementById('world-freeze');
+  if (wf) wf.remove();
+  const wt = document.getElementById('world-text');
+  if (wt) wt.remove();
+
+  showPage('battle');
+  addLog('🔔 BATTLE DIMULAI! Bola mulai mantul!', 'special');
+  addLog('💥 Tumbukan antar bola = DAMAGE!', 'special');
+
+  // Start skill timers
+  [1, 2].forEach(p => {
+    if (state.chars[p] === 'nuke')  startNukeTimer(p);
+    if (state.chars[p] === 'doge')  startDogeSkillTimer(p);
+    if (state.chars[p] === 'world') startWorldSkillTimer(p);
+    if (state.chars[p] === 'mih')   startMihTimer(p);
+  });
+
+  // Start physics loop
+  if (state.rafId) cancelAnimationFrame(state.rafId);
+  gameLoop();
+}
+
+// =========== PHYSICS LOOP ===========
+// No gravity — pure billiard bounce, constant speed
+
+function gameLoop(ts = 0) {
+  if (state.gameOver) return;
+
+  const arena = document.getElementById('arena');
+  const w = arena.clientWidth;
+  const h = arena.clientHeight;
+
+  [1, 2].forEach(p => {
+    if (state.stunned[p]) return;
+
+    // Move
+    state.pos[p].x += state.vel[p].x;
+    state.pos[p].y += state.vel[p].y;
+
+    // --- Floor bounce (ground div is 50px tall) ---
+    const floor = h - 50;
+    if (state.pos[p].y + BALL_SIZE >= floor) {
+      state.pos[p].y = floor - BALL_SIZE;
+      state.vel[p].y = -Math.abs(state.vel[p].y);
+    }
+
+    // --- Ceiling bounce ---
+    if (state.pos[p].y <= 0) {
+      state.pos[p].y = 0;
+      state.vel[p].y = Math.abs(state.vel[p].y);
+    }
+
+    // --- Left wall bounce ---
+    if (state.pos[p].x <= 0) {
+      state.pos[p].x = 0;
+      state.vel[p].x = Math.abs(state.vel[p].x);
+    }
+
+    // --- Right wall bounce ---
+    if (state.pos[p].x + BALL_SIZE >= w) {
+      state.pos[p].x = w - BALL_SIZE;
+      state.vel[p].x = -Math.abs(state.vel[p].x);
+    }
+
+    // Lock to per-player speed (MiH gets faster over time)
+    const targetSpd = (state.chars[p] === 'mih') ? state.mihSpeed[p] : BALL_SPEED;
+    const spd = Math.sqrt(state.vel[p].x**2 + state.vel[p].y**2);
+    if (spd > 0.01) {
+      state.vel[p].x = (state.vel[p].x / spd) * targetSpd;
+      state.vel[p].y = (state.vel[p].y / spd) * targetSpd;
+    }
+
+    // Update DOM
+    const ball = document.getElementById(`ball-p${p}`);
+    ball.style.left = state.pos[p].x + 'px';
+    ball.style.top  = state.pos[p].y + 'px';
+
+    // Update stun stars position
+    const stars = document.getElementById(`stun-stars-${p}`);
+    if (stars) {
+      stars.style.left = (state.pos[p].x + BALL_SIZE/2 - 15) + 'px';
+      stars.style.top  = (state.pos[p].y - 28) + 'px';
+    }
+  });
+
+  // Ball-ball collision
+  checkBallCollision();
+
+  state.rafId = requestAnimationFrame(gameLoop);
+}
+
+function checkBallCollision() {
+  const x1 = state.pos[1].x + BALL_SIZE / 2;
+  const y1 = state.pos[1].y + BALL_SIZE / 2;
+  const x2 = state.pos[2].x + BALL_SIZE / 2;
+  const y2 = state.pos[2].y + BALL_SIZE / 2;
+
+  const dist = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+  if (dist < BALL_SIZE) {
+    const angle = Math.atan2(y2-y1, x2-x1);
+    const overlap = BALL_SIZE - dist;
+
+    // Only push non-stunned balls
+    if (!state.stunned[1]) {
+      state.pos[1].x -= Math.cos(angle) * overlap/2;
+      state.pos[1].y -= Math.sin(angle) * overlap/2;
+    }
+    if (!state.stunned[2]) {
+      state.pos[2].x += Math.cos(angle) * overlap/2;
+      state.pos[2].y += Math.sin(angle) * overlap/2;
+    }
+
+    // Reflect: if target stunned, attacker fully bounces off (wall-like)
+    const nx = (x2-x1)/dist;
+    const ny = (y2-y1)/dist;
+
+    if (state.stunned[1] && !state.stunned[2]) {
+      // P1 stunned, P2 bounces off
+      const dot2 = state.vel[2].x * nx + state.vel[2].y * ny;
+      state.vel[2].x -= 2 * dot2 * nx;
+      state.vel[2].y -= 2 * dot2 * ny;
+      const spd2 = Math.sqrt(state.vel[2].x**2 + state.vel[2].y**2);
+      if (spd2 > 0.01) { state.vel[2].x = (state.vel[2].x/spd2)*BALL_SPEED; state.vel[2].y = (state.vel[2].y/spd2)*BALL_SPEED; }
+    } else if (state.stunned[2] && !state.stunned[1]) {
+      // P2 stunned, P1 bounces off
+      const dot1 = state.vel[1].x * (-nx) + state.vel[1].y * (-ny);
+      state.vel[1].x -= 2 * dot1 * (-nx);
+      state.vel[1].y -= 2 * dot1 * (-ny);
+      const spd1 = Math.sqrt(state.vel[1].x**2 + state.vel[1].y**2);
+      if (spd1 > 0.01) { state.vel[1].x = (state.vel[1].x/spd1)*BALL_SPEED; state.vel[1].y = (state.vel[1].y/spd1)*BALL_SPEED; }
+    } else {
+      // Normal elastic collision
+      const dvx = state.vel[1].x - state.vel[2].x;
+      const dvy = state.vel[1].y - state.vel[2].y;
+      const dot = dvx*nx + dvy*ny;
+      if (dot > 0) {
+        state.vel[1].x -= dot * nx;
+        state.vel[1].y -= dot * ny;
+        state.vel[2].x += dot * nx;
+        state.vel[2].y += dot * ny;
+        [1,2].forEach(p => {
+          const spd = Math.sqrt(state.vel[p].x**2 + state.vel[p].y**2);
+          if (spd > 0.01) { state.vel[p].x = (state.vel[p].x/spd)*BALL_SPEED; state.vel[p].y = (state.vel[p].y/spd)*BALL_SPEED; }
+        });
+      }
+    }
+
+
+
+    // Deal collision damage (with cooldown)
+    const now = Date.now();
+    if (now - state.lastCollision > COLLISION_COOLDOWN) {
+      state.lastCollision = now;
+      onBallCollision(x1 + (x2-x1)/2, y1 + (y2-y1)/2);
+    }
+  }
+}
+
+function onBallCollision(cx, cy) {
+  if (state.gameOver) return;
+
+  // Flash at collision point
+  const arena = document.getElementById('arena');
+  const arenaRect = arena.getBoundingClientRect();
+  const flash = document.createElement('div');
+  flash.className = 'collision-flash';
+  flash.style.left = cx + 'px';
+  flash.style.top  = cy + 'px';
+  arena.appendChild(flash);
+  setTimeout(() => flash.remove(), 400);
+
+  // Deal damage to both — check dodge, stun x3
+  [1, 2].forEach(target => {
+    if (state.chars[target] === 'doge' && state.dodge[target] && !state.stunned[target]) {
+      // Consume dodge
+      state.dodge[target] = false;
+      clearDodgeVisual(target);
+      // Cancel the auto-expire timeout, restart cooldown now
+      if (state.dogeRestartTimeout[target]) clearTimeout(state.dogeRestartTimeout[target]);
+      startDogeSkillTimer(target);
+      showMiss(target);
+      addLog(`🐕 Player ${target} DODGE tumbukan!`, `p${target}`);
+      return;
+    }
+    const attacker = target === 1 ? 2 : 1;
+    // MiH always deals 12 flat dmg when it collides
+    let dmg = (state.chars[attacker] === 'mih')
+      ? 12
+      : Math.floor(Math.random() * (COLLISION_DMG_MAX - COLLISION_DMG_MIN + 1)) + COLLISION_DMG_MIN;
+    // x3 damage if target is stunned
+    if (state.stunned[target]) {
+      dmg = dmg * 3;
+      addLog(`💥 STUN BONUS! P${target} kena ${dmg} dmg (x3)! 🌍`, 'world');
+    } else if (state.chars[attacker] === 'mih') {
+      addLog(`⚡ MiH serang! P${target} kena ${dmg} dmg!`, `p${attacker}`);
+    } else {
+      addLog(`💥 Tumbukan! P${target} kena ${dmg} dmg!`, `p${target}`);
+    }
+    dealDamage(target, dmg);
+  });
+}
+
+// =========== NUKE TIMER ===========
+function startNukeTimer(p) {
+  if (state.gameOver || state.chars[p] !== 'nuke') return;
+  state.nukeTimer[p] = 15;
+  showNukeTimerHUD(p);
+  tickNuke(p);
+}
+
+function tickNuke(p) {
+  if (state.gameOver || state.chars[p] !== 'nuke') return;
+  if (state.stunned[p]) {
+    // paused — check again in 200ms
+    state.nukeInterval[p] = setTimeout(() => tickNuke(p), 200);
+    return;
+  }
+  if (state.nukeTimer[p] <= 0) {
+    nukeExplode(p);
+    return;
+  }
+  document.getElementById(`skill-label-p${p}`).textContent = `💣 Meledak: ${state.nukeTimer[p]}s`;
+  updateNukeTimerHUD(p);
+  const pct = ((15 - state.nukeTimer[p]) / 15) * 100;
+  document.getElementById(`cd-p${p}`).style.width = pct + '%';
+  state.nukeTimer[p]--;
+  state.nukeInterval[p] = setTimeout(() => tickNuke(p), 1000);
+}
+
+function showNukeTimerHUD(p) {
+  const existing = document.getElementById(`nuke-timer-${p}`);
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.className = 'nuke-timer';
+  el.id = `nuke-timer-${p}`;
+  el.style.left  = p === 1 ? '10px' : 'auto';
+  el.style.right = p === 2 ? '10px' : 'auto';
+  el.textContent = `💣 P${p} MELEDAK: 15s`;
+  document.getElementById('arena').appendChild(el);
+}
+
+function updateNukeTimerHUD(p) {
+  const el = document.getElementById(`nuke-timer-${p}`);
+  if (el) el.textContent = `💣 P${p} MELEDAK: ${state.nukeTimer[p]}s`;
+}
+
+function nukeExplode(p) {
+  if (state.gameOver) return;
+  const el = document.getElementById(`nuke-timer-${p}`);
+  if (el) el.remove();
+
+  const target = p === 1 ? 2 : 1;
+  const dmg = 55;
+
+  addLog(`💥 PLAYER ${p} MELEDAK!`, 'special');
+  doExplosion(p);
+
+  setTimeout(() => {
+    if (state.gameOver) return;
+    // Lawan kena damage
+    addLog(`Player ${target} kena ledakan ${dmg} damage!`, `p${target}`);
+    dealDamage(target, dmg);
+    // NUKE sendiri juga mati setelah ledakan
+    setTimeout(() => {
+      if (state.gameOver) return;
+      addLog(`💀 Player ${p} mati terkena ledakannya sendiri!`, 'special');
+      dealDamage(p, 9999); // instant death for bomb owner
+    }, 200);
+  }, 400);
+}
+
+function doExplosion(p) {
+  const arena = document.getElementById('arena');
+  const exp = document.createElement('div');
+  exp.className = 'explosion';
+  exp.style.left = (state.pos[p].x + BALL_SIZE/2) + 'px';
+  exp.style.top  = (state.pos[p].y + BALL_SIZE/2) + 'px';
+  arena.appendChild(exp);
+  setTimeout(() => exp.remove(), 700);
+
+  const ball = document.getElementById(`ball-p${p}`);
+  ball.style.transform = 'scale(2)';
+  setTimeout(() => ball.style.transform = '', 300);
+}
+
+// =========== DOGE SKILL TIMER ===========
+function startDogeSkillTimer(p) {
+  if (state.gameOver || state.chars[p] !== 'doge') return;
+  state.dogeSkillTimer[p] = 10;
+  tickDoge(p);
+}
+
+function tickDoge(p) {
+  if (state.gameOver || state.chars[p] !== 'doge') return;
+  if (state.stunned[p]) {
+    // paused — check again in 200ms
+    state.dogeSkillInterval[p] = setTimeout(() => tickDoge(p), 200);
+    return;
+  }
+  if (state.dogeSkillTimer[p] <= 0) {
+    activateDodge(p);
+    return;
+  }
+  const pct = ((10 - state.dogeSkillTimer[p]) / 10) * 100;
+  document.getElementById(`cd-p${p}`).style.width = pct + '%';
+  document.getElementById(`skill-label-p${p}`).textContent = `🐕 Dodge: ${state.dogeSkillTimer[p]}s`;
+  state.dogeSkillTimer[p]--;
+  state.dogeSkillInterval[p] = setTimeout(() => tickDoge(p), 1000);
+}
+
+function activateDodge(p) {
+  if (state.gameOver || state.chars[p] !== 'doge') return;
+  state.dodge[p] = true;
+
+  const ball = document.getElementById(`ball-p${p}`);
+  ball.style.outline = '3px solid var(--doge-color)';
+  ball.style.boxShadow = '0 0 30px var(--doge-color)';
+
+  addLog(`🐕 Player ${p} siap DODGE tumbukan berikutnya!`, `p${p}`);
+  document.getElementById(`skill-label-p${p}`).textContent = `🐕 DODGE AKTIF!`;
+  document.getElementById(`cd-p${p}`).style.width = '100%';
+
+  // After dodge is consumed or 5s max, restart cooldown
+  state.dogeRestartTimeout[p] = setTimeout(() => {
+    if (state.gameOver || state.chars[p] !== 'doge') return;
+    state.dodge[p] = false;
+    clearDodgeVisual(p);
+    startDogeSkillTimer(p);
+  }, 5000);
+}
+
+function clearDodgeVisual(p) {
+  const ball = document.getElementById(`ball-p${p}`);
+  ball.style.outline = '';
+  ball.style.boxShadow = '';
+}
+
+// =========== THE WORLD SKILL TIMER ===========
+function startWorldSkillTimer(p) {
+  if (state.gameOver || state.chars[p] !== 'world') return;
+  state.worldSkillTimer[p] = 14;
+  tickWorld(p);
+}
+
+function tickWorld(p) {
+  if (state.gameOver || state.chars[p] !== 'world') return;
+  if (state.stunned[p]) {
+    state.worldSkillInterval[p] = setTimeout(() => tickWorld(p), 200);
+    return;
+  }
+  if (state.worldSkillTimer[p] <= 0) {
+    activateWorldSkill(p);
+    return;
+  }
+  const pct = ((14 - state.worldSkillTimer[p]) / 14) * 100;
+  document.getElementById(`cd-p${p}`).style.width = pct + '%';
+  document.getElementById(`skill-label-p${p}`).textContent = `🌍 Za Warudo: ${state.worldSkillTimer[p]}s`;
+  state.worldSkillTimer[p]--;
+  state.worldSkillInterval[p] = setTimeout(() => tickWorld(p), 1000);
+}
+
+function activateWorldSkill(p) {
+  if (state.gameOver) return;
+  // Guard: only fire if this player is actually The World
+  if (state.chars[p] !== 'world') return;
+  const target = p === 1 ? 2 : 1;
+  const stunDuration = 3000;
+
+  addLog(`🌍 ZA WARUDO! Player ${p} stop waktu! Player ${target} di-STUN!`, 'world');
+
+  // Show dramatic effect
+  const arena = document.getElementById('arena');
+
+  const wf = document.createElement('div');
+  wf.className = 'world-freeze';
+  wf.id = 'world-freeze';
+  arena.appendChild(wf);
+
+  const wt = document.createElement('div');
+  wt.className = 'world-text';
+  wt.id = 'world-text';
+  wt.textContent = 'ZA WARUDO!';
+  arena.appendChild(wt);
+
+  setTimeout(() => { wt.remove(); }, 1200);
+  setTimeout(() => { wf.remove(); }, stunDuration);
+
+  // Stun target — pause their skill timers
+  state.stunned[target] = true;
+
+  // Pause all skill timers of the stunned player
+  clearInterval(state.nukeInterval[target]);
+  clearInterval(state.dogeSkillInterval[target]);
+  clearInterval(state.worldSkillInterval[target]);
+
+  // Show stun stars
+  const stars = document.createElement('div');
+  stars.className = 'stun-stars';
+  stars.id = `stun-stars-${target}`;
+  stars.textContent = '⭐💫⭐';
+  arena.appendChild(stars);
+
+  document.getElementById(`ball-p${target}`).classList.add('stunned');
+
+  if (state.stunTimeout[target]) clearTimeout(state.stunTimeout[target]);
+  state.stunTimeout[target] = setTimeout(() => {
+    if (state.gameOver) return;
+    state.stunned[target] = false;
+    document.getElementById(`ball-p${target}`).classList.remove('stunned');
+    const s = document.getElementById(`stun-stars-${target}`);
+    if (s) s.remove();
+    addLog(`Player ${target} bebas dari stun! Skill timer lanjut!`, `p${target}`);
+
+    // Tick functions auto-resume since they check state.stunned[p]
+    // Just need to kick off the tick again
+    const ch = state.chars[target];
+    if (ch === 'nuke') state.nukeInterval[target] = setTimeout(() => tickNuke(target), 200);
+    else if (ch === 'doge') {
+      if (state.dodge[target]) {
+        // was in dodge-active window, let dogeRestartTimeout handle it
+      } else {
+        state.dogeSkillInterval[target] = setTimeout(() => tickDoge(target), 200);
+      }
+    }
+    else if (ch === 'world') state.worldSkillInterval[target] = setTimeout(() => tickWorld(target), 200);
+  }, stunDuration);
+
+  document.getElementById(`skill-label-p${p}`).textContent = `🌍 ZA WARUDO AKTIF!`;
+  document.getElementById(`cd-p${p}`).style.width = '100%';
+
+  // Restart cooldown after stun duration
+  state.worldRestartTimeout[p] = setTimeout(() => {
+    if (!state.gameOver && state.chars[p] === 'world') startWorldSkillTimer(p);
+  }, stunDuration + 100);
+}
+
+// =========== RESUME TIMERS AFTER STUN ===========
+// No longer needed — tickX functions handle pausing automatically via stunned check
+
+// (Resume functions removed — tick functions handle auto-resume via stunned check)
+
+// =========== MADE IN HEAVEN TIMER ===========
+function startMihTimer(p) {
+  if (state.gameOver || state.chars[p] !== 'mih') return;
+  tickMih(p, 12);
+}
+
+function tickMih(p, remaining) {
+  if (state.gameOver || state.chars[p] !== 'mih') return;
+  if (state.stunned[p]) {
+    state.mihRestartTimeout[p] = setTimeout(() => tickMih(p, remaining), 200);
+    return;
+  }
+  if (remaining <= 0) {
+    // Speed up!
+    state.mihSpeed[p] = Math.min(state.mihSpeed[p] + 2.5, 28); // cap at 28
+    const ball = document.getElementById(`ball-p${p}`);
+    ball.classList.add('mih-active');
+    addLog(`⚡ MADE IN HEAVEN P${p}! Kecepatan ${state.mihSpeed[p].toFixed(1)}!`, 'special');
+    document.getElementById(`skill-label-p${p}`).textContent = `⚡ SPEED: ${state.mihSpeed[p].toFixed(1)}x`;
+    document.getElementById(`cd-p${p}`).style.width = '100%';
+    // Flash effect
+    setTimeout(() => document.getElementById(`cd-p${p}`).style.width = '0%', 300);
+    // Start next cycle
+    state.mihRestartTimeout[p] = setTimeout(() => tickMih(p, 12), 500);
+    return;
+  }
+  const pct = ((12 - remaining) / 12) * 100;
+  document.getElementById(`cd-p${p}`).style.width = pct + '%';
+  document.getElementById(`skill-label-p${p}`).textContent = `⚡ Speed up: ${remaining}s`;
+  state.mihRestartTimeout[p] = setTimeout(() => tickMih(p, remaining - 1), 1000);
+}
+
+// =========== DAMAGE ===========
+function dealDamage(target, dmg) {
+  if (state.gameOver) return;
+  // MiH: 15% damage reduction
+  if (state.chars[target] === 'mih') {
+    dmg = Math.floor(dmg * 0.85);
+  }
+
+  state.hp[target] = Math.max(0, state.hp[target] - dmg);
+  updateHpBar(target);
+  showDamagePopup(target, dmg);
+
+  const ball = document.getElementById(`ball-p${target}`);
+  ball.classList.add('hit');
+  setTimeout(() => ball.classList.remove('hit'), 400);
+
+  if (state.hp[target] <= 0) {
+    endGame(target === 1 ? 2 : 1);
+  }
+}
+
+function updateHpBar(p) {
+  const pct = (state.hp[p] / state.maxHp) * 100;
+  document.getElementById(`hp-bar-p${p}`).style.width = Math.max(0, pct) + '%';
+  document.getElementById(`hp-text-p${p}`).textContent = `${Math.max(0, state.hp[p])} HP`;
+}
+
+function showDamagePopup(target, dmg) {
+  const arena = document.getElementById('arena');
+  const el = document.createElement('div');
+  el.className = 'dmg-popup';
+  el.textContent = `-${dmg}`;
+  el.style.color = target === 1 ? 'var(--p1)' : 'var(--p2)';
+  el.style.left = (state.pos[target].x + BALL_SIZE/2) + 'px';
+  el.style.top  = (state.pos[target].y) + 'px';
+  arena.appendChild(el);
+  setTimeout(() => el.remove(), 900);
+}
+
+function showMiss(target) {
+  const arena = document.getElementById('arena');
+  const el = document.createElement('div');
+  el.className = 'dmg-miss';
+  el.textContent = 'DODGE!';
+  el.style.left = (state.pos[target].x + BALL_SIZE/2) + 'px';
+  el.style.top  = (state.pos[target].y) + 'px';
+  arena.appendChild(el);
+  setTimeout(() => el.remove(), 900);
+}
+
+// =========== LOG ===========
+function addLog(msg, cls = '') {
+  const inner = document.getElementById('log-inner');
+  const el = document.createElement('div');
+  el.className = `log-entry ${cls}`;
+  el.textContent = msg;
+  inner.insertBefore(el, inner.firstChild);
+  while (inner.children.length > 8) inner.removeChild(inner.lastChild);
+}
+
+// =========== END GAME ===========
+function endGame(winner) {
+  state.gameOver = true;
+  cancelAnimationFrame(state.rafId);
+
+  [1, 2].forEach(p => {
+    clearInterval(state.nukeInterval[p]);
+    clearInterval(state.dogeSkillInterval[p]);
+    clearInterval(state.worldSkillInterval[p]);
+    clearInterval(state.skillCdInterval[p]);
+    if (state.stunTimeout[p]) clearTimeout(state.stunTimeout[p]);
+    const el = document.getElementById(`nuke-timer-${p}`);
+    if (el) el.remove();
+    const stars = document.getElementById(`stun-stars-${p}`);
+    if (stars) stars.remove();
+  });
+
+  const wf = document.getElementById('world-freeze');
+  if (wf) wf.remove();
+  const wt = document.getElementById('world-text');
+  if (wt) wt.remove();
+
+  const winChar = state.chars[winner];
+  const wBox = document.getElementById('win-box');
+  const winColor = winner === 1 ? '#00e5ff' : '#ff4444';
+  wBox.style.borderColor = winColor;
+  wBox.style.boxShadow = `0 0 60px ${winColor}33`;
+
+  document.getElementById('win-char').textContent = charData[winChar].icon;
+  document.getElementById('win-title').textContent = `PLAYER ${winner}`;
+  document.getElementById('win-title').style.color = winColor;
+  document.getElementById('win-msg').textContent = `${charData[winChar].name} menang! Player ${winner === 1 ? 2 : 1} kalah!`;
+  document.getElementById('win-overlay').classList.add('show');
+
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => spawnConfetti(winColor), i * 40);
+  }
+}
+
+function spawnConfetti(baseColor) {
+  const colors = [baseColor, '#fff', '#ffd700', '#ff88ff', '#88ffff'];
+  const el = document.createElement('div');
+  el.className = 'confetti-piece';
+  el.style.left = Math.random() * 100 + 'vw';
+  el.style.background = colors[Math.floor(Math.random() * colors.length)];
+  el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+  el.style.animationDelay = Math.random() * 0.5 + 's';
+  el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// =========== REPLAY ===========
+function replay() {
+  [1, 2].forEach(p => {
+    clearTimeout(state.nukeInterval[p]);
+    clearTimeout(state.dogeSkillInterval[p]);
+    clearTimeout(state.worldSkillInterval[p]);
+    clearTimeout(state.skillCdInterval[p]);
+    if (state.stunTimeout[p]) clearTimeout(state.stunTimeout[p]);
+    if (state.worldRestartTimeout[p]) clearTimeout(state.worldRestartTimeout[p]);
+    if (state.dogeRestartTimeout[p]) clearTimeout(state.dogeRestartTimeout[p]);
+    if (state.mihRestartTimeout[p]) clearTimeout(state.mihRestartTimeout[p]);
+  });
+  cancelAnimationFrame(state.rafId);
+
+  state.chars = { 1: null, 2: null };
+  document.querySelectorAll('.char-card').forEach(c => {
+    c.classList.remove('selected-nuke', 'selected-doge', 'selected-world', 'selected-mih');
+  });
+  document.getElementById('start-btn').disabled = true;
+  document.getElementById('select-hint').textContent = 'Pilih karakter untuk kedua player';
+  document.getElementById('select-hint').style.color = '';
+  document.getElementById('win-overlay').classList.remove('show');
+  showPage('select');
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+}
+</script>
+</body>
+</html>
